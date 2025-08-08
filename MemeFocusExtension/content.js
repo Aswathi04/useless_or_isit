@@ -1,21 +1,33 @@
+// content.js
+
 console.log("Meme Focus extension loaded!");
 
-// Load iframe
-const iframe = document.createElement('iframe');
-iframe.src = chrome.runtime.getURL('face-detector.html');
-iframe.style.display = 'none';
-document.body.appendChild(iframe);
+// --- 1. CONFIGURATION AND RESOURCES ---
+const memes = [
+  chrome.runtime.getURL('memes/meme1.jpg'),
+  chrome.runtime.getURL('memes/meme2.jpg')
+  // Add more memes here
+];
 
-// Initialize Web Worker
-const worker = new Worker(chrome.runtime.getURL('face-detector-worker.js'));
+const audioUrl = chrome.runtime.getURL('audio/alarm_clock_new_s5.mp3');
 
-// Show meme and play sound
+let isDozingOff = false;
+let closedEyeFrames = 0;
+const CLOSED_EYE_THRESHOLD = 30;
+
+// --- 2. AUDIO AND MEME DISPLAY FUNCTIONS ---
+function playWakeUpSound() {
+  const sound = new Audio(audioUrl);
+  sound.play().catch(e => console.error("Error playing sound:", e));
+}
+
 function showMeme() {
-  const memes = [
-    chrome.runtime.getURL('memes/meme1.jpg'),
-    chrome.runtime.getURL('memes/meme2.jpg'),
-  ];
-  const audioUrl = chrome.runtime.getURL('audio/alarm_clock_new_s5.mp3');
+  if (isDozingOff) {
+    return;
+  }
+  isDozingOff = true;
+
+  playWakeUpSound();
 
   const popup = document.createElement('div');
   popup.style.position = 'fixed';
@@ -29,21 +41,45 @@ function showMeme() {
   popup.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
 
   const randomMeme = memes[Math.floor(Math.random() * memes.length)];
-  popup.innerHTML = `<img src="${randomMeme}" width="250" height="250">`;
+  
+  popup.innerHTML = `<img src="${randomMeme}" width="250" height="250" style="display:block;">`;
   document.body.appendChild(popup);
 
-  const sound = new Audio(audioUrl);
-  sound.play().catch(e => console.error("Audio error:", e));
-
-  setTimeout(() => popup.remove(), 5000);
+  setTimeout(() => {
+    popup.remove();
+    isDozingOff = false;
+  }, 5000);
 }
 
-// Listen for messages from the Web Worker
-worker.onmessage = (event) => {
-  if (event.data?.type === 'DOZING_OFF') {
-    showMeme();
+// --- 3. BRIDGE FUNCTIONS AND INITIALIZATION ---
+async function init() {
+  // Get the camera stream from the user
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  if (!stream) {
+    console.error("Failed to get camera stream.");
+    return;
   }
-};
+  
+  // Create and inject the sandboxed iframe into the page
+  const iframe = document.createElement('iframe');
+  iframe.src = chrome.runtime.getURL('sandbox.html');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  
+  iframe.onload = () => {
+    // Send the video stream to the sandboxed iframe
+    iframe.contentWindow.postMessage({ type: 'start_stream', stream: stream }, '*');
+  };
 
-// Send a message to the Web Worker to start processing
-worker.postMessage({ type: 'START_DETECTION' });
+  // Listen for messages from the sandboxed iframe
+  window.addEventListener('message', event => {
+    if (event.data.type === 'inattention_detected') {
+      showMeme();
+    }
+  });
+
+  console.log("Sandbox iframe created and listening for messages.");
+}
+
+// Start the extension once the window has loaded
+window.addEventListener('load', init);
