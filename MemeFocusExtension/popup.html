@@ -1,18 +1,133 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Meme Focus</title>
+  <title>MemeFocus</title>
   <style>
     body {
-      width: 200px;
-      font-family: sans-serif;
+      width: 300px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .container {
       text-align: center;
-      padding: 10px;
+    }
+    
+    h2 {
+      margin: 0 0 15px 0;
+      font-size: 24px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .status {
+      background: rgba(255,255,255,0.2);
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      backdrop-filter: blur(10px);
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-active {
+      background: #28a745;
+      box-shadow: 0 0 10px #28a745;
+    }
+    
+    .status-inactive {
+      background: #dc3545;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+    }
+    
+    button:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .test-button {
+      background: rgba(40, 167, 69, 0.9) !important;
+      color: white !important;
+    }
+    
+    .test-button:hover {
+      background: rgba(40, 167, 69, 1) !important;
+    }
+    
+    .info {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 15px;
+      line-height: 1.4;
+    }
+    
+    .emoji {
+      font-size: 20px;
+      margin: 0 5px;
     }
   </style>
 </head>
 <body>
-  <h3>Meme Focus</h3>
-  <p>Extension is active! It will only run in a Google Meet.</p>
+  <div class="container">
+    <h2>🎯 MemeFocus</h2>
+    
+    <div class="status">
+      <div id="statusIndicator">
+        <span class="status-indicator status-inactive"></span>
+        <span id="statusText">Checking status...</span>
+      </div>
+    </div>
+    
+    <button id="testMemeButton" class="test-button">
+      <span class="emoji">😄</span>
+      Test Meme Display
+      <span class="emoji">😄</span>
+    </button>
+    
+    <button id="refreshButton">
+      <span class="emoji">🔄</span>
+      Refresh Status
+    </button>
+    
+    <div class="info">
+      <strong>How it works:</strong>  
+
+      • Detects when you're not paying attention  
+
+      • Shows wake-up alerts with sound  
+
+      • Random memes to keep you entertained  
+
+      • Only works on Google Meet pages
+    </div>
+  </div>
+  
+  <script src="popup_fixed.js"></script>
 </body>
 </html>
