@@ -1,0 +1,16 @@
+<!-- face-detector.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Face Detector</title>
+    <!-- Loosen CSP here -->
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval';">
+    <script src="face-api.min.js"></script>
+    <script src="face-detector.js" defer></script>
+  </head>
+  <body>
+    <video id="video" autoplay muted playsinline style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+  </body>
+</html>
