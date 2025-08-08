@@ -3,6 +3,13 @@
 console.log("Meme Focus extension loaded!");
 
 // --- 1. CONFIGURATION AND RESOURCES ---
+// Initialize face-api.js models
+async function loadFaceDetectionModels() {
+    
+}
+
+// Load models when extension starts
+loadFaceDetectionModels();
 const memes = [
   chrome.runtime.getURL('memes/meme1.jpg'),
   chrome.runtime.getURL('memes/meme2.jpg'),
