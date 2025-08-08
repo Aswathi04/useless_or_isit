@@ -2,20 +2,18 @@
 
 console.log("Meme Focus extension loaded!");
 
-// --- 1. CONFIGURATION AND RESOURCES ---
 const memes = [
   chrome.runtime.getURL('memes/meme1.jpg'),
   chrome.runtime.getURL('memes/meme2.jpg')
-  // Add more memes here
 ];
-
 const audioUrl = chrome.runtime.getURL('audio/alarm_clock_new_s5.mp3');
+const modelUrls = {
+  tinyFaceDetector: chrome.runtime.getURL('models/tiny_face_detector_model.json'),
+  faceLandmark: chrome.runtime.getURL('models/face_landmark_68_model.json')
+};
 
 let isDozingOff = false;
-let closedEyeFrames = 0;
-const CLOSED_EYE_THRESHOLD = 30;
 
-// --- 2. AUDIO AND MEME DISPLAY FUNCTIONS ---
 function playWakeUpSound() {
   const sound = new Audio(audioUrl);
   sound.play().catch(e => console.error("Error playing sound:", e));
@@ -51,7 +49,6 @@ function showMeme() {
   }, 5000);
 }
 
-// --- 3. BRIDGE FUNCTIONS AND INITIALIZATION ---
 async function init() {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   if (!stream) {
@@ -72,7 +69,7 @@ async function init() {
   await new Promise(resolve => video.onloadedmetadata = resolve);
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext('2d', { willReadFrequently: true });
 
   const iframe = document.createElement('iframe');
   iframe.src = chrome.runtime.getURL('sandbox.html');
@@ -80,12 +77,14 @@ async function init() {
   document.body.appendChild(iframe);
   
   window.addEventListener('message', event => {
-    if (event.data.type === 'inattention_detected') {
-      if (!isDozingOff) {
-        showMeme();
-      }
+    if (event.data.type === 'inattention_detected' && !isDozingOff) {
+      showMeme();
     }
   });
+
+  iframe.onload = () => {
+    iframe.contentWindow.postMessage({ type: 'init_models', modelUrls: modelUrls }, '*');
+  };
 
   setInterval(() => {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
