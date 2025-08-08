@@ -53,33 +53,47 @@ function showMeme() {
 
 // --- 3. BRIDGE FUNCTIONS AND INITIALIZATION ---
 async function init() {
-  // Get the camera stream from the user
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   if (!stream) {
     console.error("Failed to get camera stream.");
     return;
   }
   
-  // Create and inject the sandboxed iframe into the page
+  const video = document.createElement('video');
+  video.style.display = 'none';
+  video.srcObject = stream;
+  video.play();
+  document.body.appendChild(video);
+
+  const canvas = document.createElement('canvas');
+  canvas.style.display = 'none';
+  document.body.appendChild(canvas);
+
+  await new Promise(resolve => video.onloadedmetadata = resolve);
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const context = canvas.getContext('2d');
+
   const iframe = document.createElement('iframe');
   iframe.src = chrome.runtime.getURL('sandbox.html');
   iframe.style.display = 'none';
   document.body.appendChild(iframe);
   
-  iframe.onload = () => {
-    // Send the video stream to the sandboxed iframe
-    iframe.contentWindow.postMessage({ type: 'start_stream', stream: stream }, '*');
-  };
-
-  // Listen for messages from the sandboxed iframe
   window.addEventListener('message', event => {
     if (event.data.type === 'inattention_detected') {
-      showMeme();
+      if (!isDozingOff) {
+        showMeme();
+      }
     }
   });
 
-  console.log("Sandbox iframe created and listening for messages.");
+  setInterval(() => {
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    iframe.contentWindow.postMessage({ type: 'image_data', imageData: imageData }, '*');
+  }, 500);
+  
+  console.log("Sandbox iframe created and sending video frames.");
 }
 
-// Start the extension once the window has loaded
 window.addEventListener('load', init);
